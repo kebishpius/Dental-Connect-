@@ -1,0 +1,7 @@
+{
+  "name": "DentalConnect",
+  "description": "An AI-powered diagnostic platform for patients and dental professionals. Patients can upload photos for an instant report on potential issues, while dentists can use it as an AI-assisted tool for reviewing X-rays and images.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
