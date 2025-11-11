@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { User, Patient } from '../types';
-import { UserCircleIcon, ChevronRightIcon, SearchIcon } from './IconComponents';
+import { UserCircleIcon, ChevronRightIcon, SearchIcon, UserIcon, PlusIcon, ClipboardListIcon, CalendarIcon } from './IconComponents';
 import { PatientDetailView } from './PatientDetailView';
+import { StatCard } from './StatCard';
 
 interface DentistDashboardProps {
   user: User;
@@ -15,6 +16,24 @@ export const DentistDashboard: React.FC<DentistDashboardProps> = ({ user, allUse
   
   const patients = user.patients || [];
   const pendingConnections = user.pendingConnections || [];
+
+  // Dentist-specific metrics
+  const totalPatients = patients.length;
+  const pendingRequests = pendingConnections.length;
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentAnalyses = patients.reduce((acc, p) => {
+      const recent = p.analysisHistory?.filter(a => new Date(a.date) >= thirtyDaysAgo).length || 0;
+      return acc + recent;
+  }, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+  const totalUpcomingAppointments = patients.reduce((acc, p) => {
+      const upcoming = p.appointments?.filter(apt => new Date(apt.date) >= today).length || 0;
+      return acc + upcoming;
+  }, 0);
 
   // This effect ensures that if the user prop (the dentist) is updated from the parent,
   // the selectedPatient state is also updated with the fresh data. This prevents stale UI.
@@ -100,11 +119,11 @@ export const DentistDashboard: React.FC<DentistDashboardProps> = ({ user, allUse
         {pendingConnections.length > 0 ? (
             <div className="space-y-3">
                 {pendingConnections.map(req => (
-                    <div key={req.patientId} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border">
+                    <div key={req.patientId} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <p className="font-semibold text-gray-800">{req.patientName}</p>
                         <div className="space-x-2">
-                            <button onClick={() => handleAcceptRequest(req.patientId)} className="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Accept</button>
-                            <button onClick={() => handleDeclineRequest(req.patientId)} className="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300">Decline</button>
+                            <button onClick={() => handleAcceptRequest(req.patientId)} className="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors">Accept</button>
+                            <button onClick={() => handleDeclineRequest(req.patientId)} className="px-3 py-1 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-md hover:bg-slate-100 transition-colors">Decline</button>
                         </div>
                     </div>
                 ))}
@@ -133,7 +152,15 @@ export const DentistDashboard: React.FC<DentistDashboardProps> = ({ user, allUse
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
         <div className="bg-white p-6 rounded-lg shadow-md">
             <h1 className="text-3xl font-bold text-gray-800">Welcome, {user.name}</h1>
-            <p className="text-gray-600 mt-1">You have {patients.length} patients in your list.</p>
+            <p className="text-gray-600 mt-1">Here's a summary of your dashboard.</p>
+        </div>
+
+        {/* Dentist-specific Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard title="Total Patients" value={totalPatients.toString()} subtitle="Managed in your list" icon={<UserIcon className="h-6 w-6" />} color="from-blue-500 to-blue-600" />
+            <StatCard title="Pending Requests" value={pendingRequests.toString()} subtitle="Awaiting your approval" icon={<PlusIcon className="h-6 w-6" />} color="from-amber-500 to-amber-600" />
+            <StatCard title="Recent Analyses" value={recentAnalyses.toString()} subtitle="In the last 30 days" icon={<ClipboardListIcon className="h-6 w-6" />} color="from-teal-500 to-teal-600" />
+            <StatCard title="Upcoming Appointments" value={totalUpcomingAppointments.toString()} subtitle="For all patients" icon={<CalendarIcon className="h-6 w-6" />} color="from-indigo-500 to-indigo-600" />
         </div>
 
         {renderConnectionRequests()}
@@ -153,25 +180,27 @@ export const DentistDashboard: React.FC<DentistDashboardProps> = ({ user, allUse
             </div>
 
             {filteredPatients.length > 0 ? (
-                <div className="divide-y divide-gray-200">
-                    {filteredPatients.map(patient => (
-                        <div 
-                            key={patient.id} 
-                            className="flex justify-between items-center py-4 px-2 -mx-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => setSelectedPatient(patient)}
-                        >
-                            <div className="flex items-center space-x-4">
-                                <div className="bg-slate-100 p-3 rounded-full">
-                                    <UserCircleIcon className="h-8 w-8 text-slate-500" />
+                <div className="border rounded-lg overflow-hidden">
+                    <ul className="divide-y divide-gray-200">
+                        {filteredPatients.map(patient => (
+                            <li 
+                                key={patient.id} 
+                                className="flex justify-between items-center p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+                                onClick={() => setSelectedPatient(patient)}
+                            >
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-slate-100 p-3 rounded-full">
+                                        <UserCircleIcon className="h-8 w-8 text-slate-500" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-800">{patient.name}</p>
+                                        <p className="text-sm text-gray-500">ID: {patient.id} &bull; Last Visit: {patient.lastVisit}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-gray-800">{patient.name}</p>
-                                    <p className="text-sm text-gray-500">ID: {patient.id} &bull; Last Visit: {patient.lastVisit}</p>
-                                </div>
-                            </div>
-                            <ChevronRightIcon className="h-6 w-6 text-gray-400" />
-                        </div>
-                    ))}
+                                <ChevronRightIcon className="h-6 w-6 text-gray-400" />
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             ) : (
                 <p className="text-center text-gray-500 py-8">No patients found matching your search.</p>

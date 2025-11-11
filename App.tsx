@@ -121,7 +121,7 @@ function App() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen font-sans">
+    <div className="bg-gray-100 min-h-screen font-sans">
       {currentUser && currentUser.profileComplete && (
         <>
           <Header user={currentUser} onLogout={handleLogout} />

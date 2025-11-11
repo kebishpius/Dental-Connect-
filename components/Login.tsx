@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DentalIcon } from './IconComponents';
+import { DentalIcon, AlertTriangleIcon } from './IconComponents';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => void;
@@ -47,6 +47,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSignUp, errorMessage })
     setValidationError('');
   };
 
+  const commonErrorDisplay = (msg: string | null) => msg && (
+    <div className="bg-red-50 border-l-4 border-red-400 p-3 flex items-start">
+        <AlertTriangleIcon className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+        <p className="text-sm text-red-700">{msg}</p>
+    </div>
+  );
+
   const renderLoginForm = () => (
     <form className="space-y-6" onSubmit={handleLoginSubmit}>
       <div>
@@ -86,7 +93,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSignUp, errorMessage })
         </div>
       </div>
       
-      {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
+      {commonErrorDisplay(errorMessage)}
 
       <div>
         <button
@@ -170,9 +177,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSignUp, errorMessage })
         </div>
       </div>
       
-      {validationError && <div className="text-red-600 text-sm">{validationError}</div>}
-      {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
-
+      {commonErrorDisplay(validationError || errorMessage)}
 
       <div>
         <button
@@ -186,7 +191,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSignUp, errorMessage })
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-6">
             <div className="bg-blue-600 p-4 rounded-full shadow-lg">
@@ -220,10 +225,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSignUp, errorMessage })
                 <span className="px-2 bg-white text-gray-500">Demo Accounts</span>
               </div>
             </div>
-            <div className="mt-6 text-center text-sm space-y-1">
-                <p className="text-gray-500">Patient: <button onClick={() => {setEmail('patient@example.com'); setPassword('password');}} className="font-medium text-blue-600 hover:underline">patient@example.com</button></p>
-                <p className="text-gray-500">Dentist: <button onClick={() => {setEmail('dentist@example.com'); setPassword('password');}} className="font-medium text-blue-600 hover:underline">dentist@example.com</button></p>
-                <p className="text-gray-500">New User Flow: <button onClick={() => {setEmail('new@example.com'); setPassword('password');}} className="font-medium text-blue-600 hover:underline">new@example.com</button></p>
+             <div className="mt-4 text-center text-sm">
+                <p className="text-gray-500 mb-2">Click to auto-fill credentials:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                    <button type="button" onClick={() => {setEmail('patient@example.com'); setPassword('password');}} className="text-xs font-semibold px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition-colors">Patient</button>
+                    <button type="button" onClick={() => {setEmail('dentist@example.com'); setPassword('password');}} className="text-xs font-semibold px-3 py-1.5 bg-indigo-100 text-indigo-800 rounded-full hover:bg-indigo-200 transition-colors">Dentist</button>
+                    <button type="button" onClick={() => {setEmail('new@example.com'); setPassword('password');}} className="text-xs font-semibold px-3 py-1.5 bg-slate-100 text-slate-800 rounded-full hover:bg-slate-200 transition-colors">New User</button>
+                </div>
             </div>
           </div>
         </div>

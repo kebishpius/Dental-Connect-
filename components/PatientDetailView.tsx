@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Patient, AnalysisResult, User, PendingScan, PatientAnalysis, Appointment } from '../types';
-import { UserCircleIcon, MagicWandIcon, AlertTriangleIcon, ClipboardListIcon, SendIcon, CalendarIcon, CheckCircleIcon } from './IconComponents';
+import { UserCircleIcon, MagicWandIcon, AlertTriangleIcon, ClipboardListIcon, SendIcon, CalendarIcon, CheckCircleIcon, ChevronRightIcon } from './IconComponents';
 import { ReportDisplay } from './ReportDisplay';
 import { AIAssistantTools } from './AIAssistantTools';
 import { ImageUploader } from './ImageUploader';
@@ -20,6 +20,29 @@ interface PatientDetailViewProps {
   onUpdateUsers: (users: User[]) => void;
 }
 
+const AccordionItem: React.FC<{
+    analysis: PatientAnalysis;
+    index: number;
+    children: React.ReactNode;
+    isOpen: boolean;
+    onToggle: () => void;
+}> = ({ analysis, index, children, isOpen, onToggle }) => (
+    <div className="border-t first:border-t-0">
+        <button
+            onClick={onToggle}
+            className="w-full flex justify-between items-center py-4 text-left"
+        >
+            <h3 className="text-lg font-semibold text-gray-700">Analysis from {analysis.date}</h3>
+            <ChevronRightIcon className={`h-6 w-6 text-gray-500 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+        </button>
+        {isOpen && (
+            <div className="pb-6 animate-fade-in">
+                {children}
+            </div>
+        )}
+    </div>
+);
+
 export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, onBack, dentistUser, allUsers, onUpdateUsers }) => {
     const [imageForAnalysis, setImageForAnalysis] = useState<File | null>(null);
     const [reviewedScanId, setReviewedScanId] = useState<string | null>(null);
@@ -35,6 +58,11 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
     const [isAddAppointmentModalOpen, setAddAppointmentModalOpen] = useState(false);
     const [isAllAppointmentsModalOpen, setAllAppointmentsModalOpen] = useState(false);
     const [completedScanId, setCompletedScanId] = useState<string | null>(null);
+    const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(0); // Open the first item by default
+
+    const handleToggleAccordion = (index: number) => {
+        setOpenAccordionIndex(openAccordionIndex === index ? null : index);
+    };
 
     useEffect(() => {
       const initialNotes: Record<number, string> = {};
@@ -398,6 +426,8 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
         </div>
       );
 
+    const sortedHistory = [...patient.analysisHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     return (
         <div className="space-y-6 animate-fade-in">
             <button onClick={onBack} className="font-semibold text-blue-600 hover:text-blue-700">
@@ -430,10 +460,15 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Analysis History</h2>
                 {patient.analysisHistory.length > 0 ? (
-                    <div className="space-y-8">
-                        {patient.analysisHistory.map((analysis, index) => (
-                           <div key={index} className="border-t pt-6 first:border-t-0 first:pt-0">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-2">Analysis from {analysis.date}</h3>
+                    <div className="space-y-0">
+                        {sortedHistory.map((analysis, index) => (
+                           <AccordionItem
+                                key={index}
+                                analysis={analysis}
+                                index={index}
+                                isOpen={openAccordionIndex === index}
+                                onToggle={() => handleToggleAccordion(index)}
+                           >
                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                                     <div>
                                         <img 
@@ -499,7 +534,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
                                         </div>
                                     </div>
                                 </div>
-                           </div>
+                           </AccordionItem>
                         ))}
                     </div>
                 ) : (
